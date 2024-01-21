@@ -42,7 +42,7 @@ module.exports = {
                     where: { id: root.id },
                     populate: { orders: true },
                   });
-                return toEntityResponseCollection(userData.orders ?? {}, {
+                return toEntityResponseCollection(userData.orders ?? [], {
                   args,
                   resourceUID: "api::order.order",
                 });
