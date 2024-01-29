@@ -1,57 +1,101 @@
-# 🚀 Getting started with Strapi
+# Food delivery backend
 
-Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
+This project contains a simple Strapi-based Wolt-like food delivery backend. It uses SQLite for data storage, and it exposes GraphQL API.
 
-### `develop`
+# Getting started
 
-Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
+Once you have the project cloned, you should install required dependencies with
+
+```
+npm install
+```
+
+After the dependencies have finished installing, create `.env` file and change all the `toBeModified` with actual values
+
+```dotenv
+HOST=0.0.0.0
+PORT=3030
+APP_KEYS=toBeModified1,toBeModified2
+API_TOKEN_SALT=tobemodified
+ADMIN_JWT_SECRET=tobemodified
+TRANSFER_TOKEN_SALT=tobemodified
+JWT_SECRET=tobemodified
+# Database
+DATABASE_CLIENT=sqlite
+DATABASE_FILENAME=.tmp/data.db
+# Stripe
+STRIPE_KEY=tobemodified
+```
+Apart from `STRIPE_KEY` it is up to you to create required secrets that will replace `toBeModified` values.
+
+Once you have `.env` file in place, you can start the project with
 
 ```
 npm run develop
-# or
-yarn develop
 ```
 
-### `start`
+You can access Strapi admin pages using `http://localhost:3030/admin` and GraphQL using `http://localhost:3030/grahql`. For GraphQL, entire playground is available that comes with the editor, results viewer as well as documentation and schema explorer.
 
-Start your Strapi application with autoReload disabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-start)
+_**NOTE: Don't forget to setup correct access rights using `Settings -> Users & Permissions Plugins -> Roles` section**_
 
-```
-npm run start
-# or
-yarn start
-```
+# Features
 
-### `build`
+Backend support working with following data
 
-Build your admin panel. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-build)
+## Restaurant
 
-```
-npm run build
-# or
-yarn build
-```
+| Field       | Type        |
+|-------------|-------------|
+| name        | text        |
+| image       | media       |
+| description | markdown    |
+| dishes      | one-to-many |
 
-## ⚙️ Deployment
 
-Strapi gives you many possible deployment options for your project including [Strapi Cloud](https://cloud.strapi.io). Browse the [deployment section of the documentation](https://docs.strapi.io/dev-docs/deployment) to find the best solution for your use case.
+## Dish
 
-## 📚 Learn more
+| Field       | Type        |
+|-------------|-------------|
+| name        | text        |
+| image       | media       |
+| description | markdown    |
+| price       | decimal     |
+| restaurant  | many-to-one |
 
-- [Resource center](https://strapi.io/resource-center) - Strapi resource center.
-- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation.
-- [Strapi tutorials](https://strapi.io/tutorials) - List of tutorials made by the core team and the community.
-- [Strapi blog](https://strapi.io/blog) - Official Strapi blog containing articles made by the Strapi team and the community.
-- [Changelog](https://strapi.io/changelog) - Find out about the Strapi product updates, new features and general improvements.
+## User
 
-Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/strapi). Your feedback and contributions are welcome!
+| Field    | Type        |
+|----------|-------------|
+| username | text        |
+| email    | email       |
+| password | password    |
+| ...      | ...         |
+| cart     | one-to-one  | 
+| orders   | one-to-many |
 
-## ✨ Community
+## Cart
 
-- [Discord](https://discord.strapi.io) - Come chat with the Strapi community including the core team.
-- [Forum](https://forum.strapi.io/) - Place to discuss, ask questions and find answers, show your Strapi project and get feedback or just talk with other Community members.
-- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - A curated list of awesome things related to Strapi.
+| Field    | Type        |
+|----------|-------------|
+| user     | one-to-one  |
+| dishes   | one-to-many |
 
----
+## Order
 
-<sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>
+| Field   | Type        |
+|---------|-------------|
+| address | text        |
+| amount  | decimal     |
+| token   | text        |
+| dishes  | JSON        |
+| user    | many-to-one |
+
+# Frontend implementation
+
+While it is up to you to choose the libraries / frameworks to implement the frontend code, my proposal is to use:
+
+- [Next.js](https://nextjs.org/)
+- [React](https://react.dev/)
+- [Tailwind CSS](https://tailwindcss.com/docs/installation)
+- [Apollo Client](https://www.apollographql.com/docs/react/)
+- [React Hook Form](https://www.react-hook-form.com/)
