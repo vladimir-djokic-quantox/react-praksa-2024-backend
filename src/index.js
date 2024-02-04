@@ -8,16 +8,41 @@ module.exports = {
    * This gives you an opportunity to extend code.
    */
   register({ strapi }) {
+    /**
+     * 1) Add `restaurant(slug: String!)` query.
+     * 2) Extend `me` query with `cart` and `orders`.
+     */
     const { toEntityResponse, toEntityResponseCollection } = strapi
       .plugin("graphql")
       .service("format").returnTypes;
+
     const extensionService = strapi.plugin("graphql").service("extension");
 
     extensionService.use(({ nexus }) => ({
+      typeDefs: `
+        type Query {
+          restaurantBySlug(slug: String!): RestaurantEntityResponse
+        }
+      `,
+      resolvers: {
+        Query: {
+          restaurantBySlug: {
+            resolve: async (parent, args, context) => {
+              const data = await strapi.services[
+                "api::restaurant.restaurant"
+              ].find({
+                filters: { slug: args.slug },
+              });
+
+              return toEntityResponse(data.results[0]);
+            },
+          },
+        },
+      },
       types: [
         nexus.extendType({
           type: "UsersPermissionsMe",
-          definition(t) {
+          definition: (t) => {
             t.field("cart", {
               type: "CartEntityResponse",
               resolve: async (root, args) => {
@@ -33,6 +58,7 @@ module.exports = {
                 });
               },
             });
+
             t.field("orders", {
               type: "OrderRelationResponseCollection",
               resolve: async (root, args) => {
@@ -42,6 +68,7 @@ module.exports = {
                     where: { id: root.id },
                     populate: { orders: true },
                   });
+
                 return toEntityResponseCollection(userData.orders ?? [], {
                   args,
                   resourceUID: "api::order.order",
