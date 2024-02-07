@@ -28,13 +28,18 @@ module.exports = {
               const restaurants = await strapi.entityService.findMany(
                 "api::restaurant.restaurant",
                 {
-                  filters: { slug: args.slug },
+                  filters: { slug: { $eq: args.slug } },
                 }
               );
 
               return toEntityResponse(restaurants[0]);
             },
           },
+        },
+      },
+      resolversConfig: {
+        "Query.restaurantBySlug": {
+          auth: false,
         },
       },
     }));
@@ -64,7 +69,7 @@ module.exports = {
                   filters: {
                     user: {
                       id: {
-                        eq: userId,
+                        $eq: userId,
                       },
                     },
                   },

@@ -35,6 +35,10 @@
       "relation": "oneToMany",
       "target": "api::dish.dish",
       "mappedBy": "restaurant"
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name"
     }
   }
 }

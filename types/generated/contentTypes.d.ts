@@ -476,6 +476,7 @@ export interface ApiRestaurantRestaurant extends Schema.CollectionType {
       'oneToMany',
       'api::dish.dish'
     >;
+    slug: Attribute.UID<'api::restaurant.restaurant', 'name'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
