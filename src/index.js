@@ -15,7 +15,7 @@ module.exports = {
     const extensionService = strapi.plugin("graphql").service("extension");
 
     /** Add `restaurant(slug: String!)` query. */
-    extensionService.use(() => ({
+    extensionService.use(({ strapi }) => ({
       typeDefs: `
         type Query {
           restaurantBySlug(slug: String!): RestaurantEntityResponse
@@ -44,11 +44,119 @@ module.exports = {
       },
     }));
 
-    /** Add `addToCart(dishes: [ID]!)` mutation. */
-    // ...
+    /** Add `addToCart(dish: ID!)` mutation. */
+    extensionService.use(({ strapi }) => ({
+      typeDefs: `
+        type Mutation {
+          addToCart(dish: ID!): CartEntityResponse!
+        }
+      `,
+      resolvers: {
+        Mutation: {
+          addToCart: {
+            resolve: async (parent, args, context) => {
+              const userId = context.state.user.id;
+              const dishId = parseInt(args.dish);
+
+              const carts = await strapi.entityService.findMany(
+                "api::cart.cart",
+                {
+                  filters: {
+                    user: {
+                      id: {
+                        $eq: userId,
+                      },
+                    },
+                  },
+                  populate: { dishes: true },
+                }
+              );
+
+              const shouldUpdate = !!carts.length;
+
+              const cart = shouldUpdate
+                ? carts[0]
+                : await strapi.entityService.create("api::cart.cart", {
+                    data: {
+                      user: userId,
+                      dishes: [dishId],
+                    },
+                  });
+
+              const dishAlreadyInCart = cart.dishes.some(
+                dish => dish.id === dishId
+              );
+
+              if (shouldUpdate && !dishAlreadyInCart) {
+                await strapi.entityService.update("api::cart.cart", cart.id, {
+                  data: {
+                    user: userId,
+                    dishes: [...cart.dishes.map(dish => dish.id), dishId],
+                  },
+                });
+              }
+
+              return toEntityResponse(cart);
+            },
+          },
+        },
+      },
+    }));
 
     /** Add `removeFromCart(dish: ID!)` mutation. */
-    // ...
+    extensionService.use(({ strapi }) => ({
+      typeDefs: `
+        type Mutation {
+          removeFromCart(dish: ID!): CartEntityResponse!
+        }
+      `,
+      resolvers: {
+        Mutation: {
+          removeFromCart: {
+            resolve: async (parent, args, context) => {
+              const userId = context.state.user.id;
+              const dishId = parseInt(args.dish);
+
+              const carts = await strapi.entityService.findMany(
+                "api::cart.cart",
+                {
+                  filters: {
+                    user: {
+                      id: {
+                        $eq: userId,
+                      },
+                    },
+                  },
+                  populate: { dishes: true },
+                }
+              );
+
+              const shouldUpdate = !!carts.length;
+
+              const cart = shouldUpdate
+                ? carts[0]
+                : await strapi.entityService.create("api::cart.cart", {
+                    data: {
+                      user: userId,
+                      dishes: [],
+                    },
+                  });
+
+              if (shouldUpdate) {
+                await strapi.entityService.update("api::cart.cart", cart.id, {
+                  data: {
+                    user: userId,
+                    dishes: [...cart.dishes.filter(dish => dish.id !== dishId)],
+                  },
+                });
+              }
+
+              return toEntityResponse(cart);
+            },
+          },
+        },
+      },
+    }));
 
     /** Add `clearCart()` mutation. */
     extensionService.use(({ strapi }) => ({
@@ -109,7 +217,7 @@ module.exports = {
       types: [
         nexus.extendType({
           type: "UsersPermissionsMe",
-          definition: (t) => {
+          definition: t => {
             t.field("cart", {
               type: "CartEntityResponse",
               resolve: async (root, args) => {
